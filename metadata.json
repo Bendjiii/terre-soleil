@@ -1,0 +1,6 @@
+{
+  "name": "La Terre autour du Soleil",
+  "description": "Application pédagogique interactive de physique-chimie (niveau 3e) pour comprendre les saisons, l'inclinaison de l'axe terrestre (23,44°) et l'alternance jour/nuit.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

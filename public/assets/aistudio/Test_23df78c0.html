@@ -1,0 +1,817 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Terre autour du Soleil</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    color: #202b3c;
+}
+
+.container {
+    max-width: 1250px;
+    margin: auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #58677a;
+    margin-bottom: 22px;
+}
+
+.visualisations {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.panel {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 2px 8px #00000015;
+    text-align: center;
+    min-width: 0;
+}
+
+.panel h2 {
+    font-size: 19px;
+    margin: 5px 0 12px;
+}
+
+.globe-container {
+    width: 100%;
+    height: 420px;
+    background: #030518;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.globe-container:active {
+    cursor: grabbing;
+}
+
+#globe3d {
+    width: 100%;
+    height: 100%;
+}
+
+#globe3d canvas {
+    display: block;
+    outline: none;
+}
+
+#orbit {
+    width: 100%;
+    display: block;
+    background: #101d32;
+    border-radius: 8px;
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 13px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.dot {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.controls {
+    background: white;
+    padding: 20px;
+    margin-top: 18px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px #00000015;
+}
+
+.control {
+    margin: 18px 0;
+}
+
+.control label {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+input[type=range] {
+    width: 100%;
+    cursor: pointer;
+}
+
+button {
+    padding: 10px 18px;
+    margin: 5px;
+    border: none;
+    border-radius: 7px;
+    background: #2466bd;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background: #174b90;
+}
+
+.infos {
+    text-align: center;
+    margin-top: 15px;
+    padding: 12px;
+    background: #eaf2fc;
+    border-radius: 8px;
+    line-height: 1.8;
+}
+
+.mouse-info {
+    font-size: 12px;
+    color: #b9c9e6;
+    text-align: center;
+    margin-top: 5px;
+}
+
+@media(max-width:750px) {
+    .visualisations {
+        grid-template-columns: 1fr;
+    }
+
+    .globe-container {
+        height: 350px;
+    }
+}
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>La Terre autour du Soleil</h1>
+
+<p class="subtitle">
+Comprendre les saisons et l'alternance jour / nuit
+</p>
+
+<div class="visualisations">
+
+    <div class="panel">
+        <h2>1. Éclairement de la Terre</h2>
+
+        <div class="globe-container">
+            <div id="globe3d"></div>
+        </div>
+
+        <div class="mouse-info">
+            Clic gauche + déplacement : tourner la Terre |
+            Molette : zoom
+        </div>
+
+        <div class="legend">
+            <span>
+                <span class="dot" style="background:#e9c879"></span>
+                Jour
+            </span>
+            <span>
+                <span class="dot" style="background:#05091c"></span>
+                Nuit
+            </span>
+            <span>
+                <span class="dot" style="background:#ffffff"></span>
+                Limite jour/nuit
+            </span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>2. Position de la Terre autour du Soleil</h2>
+
+        <canvas id="orbit" width="550" height="420"></canvas>
+
+        <div class="legend">
+            <span>
+                <span class="dot" style="background:#f5a623"></span>
+                Soleil
+            </span>
+            <span>
+                <span class="dot" style="background:#3297ef"></span>
+                Terre
+            </span>
+            <span>
+                <span class="dot" style="background:white"></span>
+                Orbite
+            </span>
+        </div>
+    </div>
+
+</div>
+
+<div class="controls">
+
+    <div class="control">
+        <label>
+            <span>Date de l'année</span>
+            <span id="dateValue">21 mars</span>
+        </label>
+
+        <input type="range" id="day"
+               min="1" max="365" value="80">
+    </div>
+
+    <div class="control">
+        <label>
+            <span>Heure solaire</span>
+            <span id="timeValue">12 h 00</span>
+        </label>
+
+        <input type="range" id="hour"
+               min="0" max="24" step="0.25" value="12">
+    </div>
+
+    <div style="text-align:center">
+        <button id="playButton">▶ Animation annuelle</button>
+        <button id="pauseButton">Ⅱ Pause</button>
+        <button id="resetButton">↺ Réinitialiser</button>
+    </div>
+
+    <div class="infos">
+        <strong id="season">Équinoxe de printemps</strong>
+        <br>
+        Déclinaison solaire :
+        <strong id="declination">0°</strong>
+    </div>
+
+</div>
+</div>
+
+<script type="module">
+
+import * as THREE from "three";
+
+import { OrbitControls } from
+"three/addons/controls/OrbitControls.js";
+
+// ==========================================
+// PARAMÈTRES
+// ==========================================
+
+const PI = Math.PI;
+const DEG = PI / 180;
+const OBLIQUITY = 23.44;
+
+const daySlider = document.getElementById("day");
+const hourSlider = document.getElementById("hour");
+
+let animation = null;
+
+const months = [
+    "janvier", "février", "mars", "avril",
+    "mai", "juin", "juillet", "août",
+    "septembre", "octobre", "novembre", "décembre"
+];
+
+function getDate(day) {
+    const date = new Date(2025, 0, day);
+    return date.getDate() + " " +
+           months[date.getMonth()];
+}
+
+// ==========================================
+// DÉCLINAISON SOLAIRE
+// ==========================================
+
+function getDeclination(day) {
+    return OBLIQUITY * Math.sin(
+        2 * PI * (day - 80) / 365.25
+    );
+}
+
+// ==========================================
+// SAISONS
+// ==========================================
+
+function getSeason(day) {
+
+    if (day >= 355 || day < 80)
+        return "Hiver (hémisphère Nord)";
+
+    if (day < 172)
+        return "Printemps (hémisphère Nord)";
+
+    if (day < 266)
+        return "Été (hémisphère Nord)";
+
+    return "Automne (hémisphère Nord)";
+}
+
+// ==========================================
+// CRÉATION DU GLOBE 3D
+// ==========================================
+
+const globeContainer = document.getElementById("globe3d");
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x030518);
+
+const camera = new THREE.PerspectiveCamera(
+    38,
+    globeContainer.clientWidth /
+    globeContainer.clientHeight,
+    0.1,
+    100
+);
+
+camera.position.set(0, 0, 4.2);
+
+// ==========================================
+// MOTEUR GRAPHIQUE
+// ==========================================
+
+const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: false
+});
+
+renderer.setPixelRatio(
+    Math.min(window.devicePixelRatio, 2)
+);
+
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+renderer.setSize(
+    globeContainer.clientWidth,
+    globeContainer.clientHeight
+);
+
+globeContainer.appendChild(renderer.domElement);
+
+// ==========================================
+// CONTRÔLES À LA SOURIS
+// ==========================================
+
+const controls = new OrbitControls(
+    camera,
+    renderer.domElement
+);
+
+// Rotation avec la souris
+
+controls.enableRotate = true;
+
+// Zoom avec la molette
+
+controls.enableZoom = true;
+
+// Déplacement avec clic droit
+
+controls.enablePan = true;
+
+// Rotation fluide
+
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+
+// Vitesse de rotation
+
+controls.rotateSpeed = 0.8;
+
+// Vitesse du zoom
+
+controls.zoomSpeed = 0.8;
+
+// Limites du zoom
+
+controls.minDistance = 2.2;
+controls.maxDistance = 7;
+
+// Empêcher le retournement complet du globe
+
+controls.minPolarAngle = 0.05;
+controls.maxPolarAngle = Math.PI - 0.05;
+
+// ==========================================
+// TERRE ET TEXTURE
+// ==========================================
+
+const earthGeometry = new THREE.SphereGeometry(
+    1,
+    128,
+    128
+);
+
+const textureLoader = new THREE.TextureLoader();
+
+textureLoader.setCrossOrigin("anonymous");
+
+const earthTexture = textureLoader.load(
+    "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg"
+);
+
+earthTexture.colorSpace = THREE.SRGBColorSpace;
+
+const earthMaterial = new THREE.MeshPhongMaterial({
+    map: earthTexture,
+    shininess: 2,
+    specular: new THREE.Color(0x080808)
+});
+
+const earth = new THREE.Mesh(
+    earthGeometry,
+    earthMaterial
+);
+
+scene.add(earth);
+
+// ==========================================
+// ÉCLAIRAGE JOUR / NUIT
+// ==========================================
+
+const ambientLight = new THREE.AmbientLight(
+    0x10182d,
+    0.045
+);
+
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(
+    0xffffff,
+    3.5
+);
+
+sunLight.position.set(0, 0, 5);
+
+scene.add(sunLight);
+
+// ==========================================
+// MISE À JOUR DE L'ÉCLAIREMENT
+// ==========================================
+
+function updateGlobe(day, hour) {
+
+    const declination =
+        getDeclination(day) * DEG;
+
+    const H = (hour - 12) * 15 * DEG;
+
+    const sunX =
+        Math.cos(declination) * Math.sin(H);
+
+    const sunY =
+        Math.sin(declination);
+
+    const sunZ =
+        Math.cos(declination) * Math.cos(H);
+
+    const sunDirection = new THREE.Vector3(
+        sunX,
+        sunY,
+        sunZ
+    ).normalize();
+
+    sunLight.position.copy(
+        sunDirection.multiplyScalar(5)
+    );
+}
+
+// ==========================================
+// ANIMATION 3D CONTINUE
+// ==========================================
+
+function animateGlobe() {
+
+    requestAnimationFrame(animateGlobe);
+
+    // Actualisation des contrôles de souris
+
+    controls.update();
+
+    // Affichage du globe
+
+    renderer.render(scene, camera);
+}
+
+animateGlobe();
+
+// ==========================================
+// REDIMENSIONNEMENT
+// ==========================================
+
+function resizeGlobe() {
+
+    const width = globeContainer.clientWidth;
+    const height = globeContainer.clientHeight;
+
+    camera.aspect = width / height;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(width, height);
+}
+
+window.addEventListener("resize", resizeGlobe);
+
+// ==========================================
+// ORBITE TERRESTRE
+// ==========================================
+
+const orbitCanvas = document.getElementById("orbit");
+
+const ctx = orbitCanvas.getContext("2d");
+
+function drawOrbit(day) {
+
+    const w = orbitCanvas.width;
+    const h = orbitCanvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.fillStyle = "#101d32";
+    ctx.fillRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const cy = h / 2;
+
+    const radius = 145;
+
+    // ORBITE
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * PI);
+
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // SOLEIL
+
+    const gradient = ctx.createRadialGradient(
+        cx, cy, 3,
+        cx, cy, 35
+    );
+
+    gradient.addColorStop(0, "#fff8b0");
+    gradient.addColorStop(0.4, "#ffc247");
+    gradient.addColorStop(1, "#e87516");
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 22, 0, 2 * PI);
+
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.fillStyle = "white";
+    ctx.font = "14px Arial";
+    ctx.textAlign = "center";
+
+    ctx.fillText("SOLEIL", cx, cy + 45);
+
+    // POSITION DE LA TERRE
+
+    const angle = 2 * PI * (day - 80) / 365.25;
+
+    const tx = cx + radius * Math.sin(angle);
+    const ty = cy - radius * Math.cos(angle);
+
+    // RAYON SOLEIL-TERRE
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(tx, ty);
+
+    ctx.strokeStyle = "#ffcf70";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // TERRE
+
+    ctx.beginPath();
+    ctx.arc(tx, ty, 13, 0, 2 * PI);
+
+    ctx.fillStyle = "#328ee0";
+    ctx.fill();
+
+    ctx.strokeStyle = "#a7d9ff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // AXE TERRESTRE
+
+    const tilt = 23.44 * DEG;
+
+    const dx = -Math.sin(tilt);
+    const dy = -Math.cos(tilt);
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        tx - dx * 28,
+        ty - dy * 28
+    );
+
+    ctx.lineTo(
+        tx + dx * 28,
+        ty + dy * 28
+    );
+
+    ctx.strokeStyle = "#ff7777";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // SAISONS
+
+    ctx.fillStyle = "white";
+    ctx.font = "13px Arial";
+
+    ctx.fillText(
+        "Printemps",
+        cx,
+        cy - radius - 18
+    );
+
+    ctx.fillText(
+        "Été",
+        cx + radius + 35,
+        cy
+    );
+
+    ctx.fillText(
+        "Automne",
+        cx,
+        cy + radius + 25
+    );
+
+    ctx.fillText(
+        "Hiver",
+        cx - radius - 35,
+        cy
+    );
+
+    // DATE
+
+    ctx.fillStyle = "#ffdc91";
+    ctx.font = "15px Arial";
+
+    ctx.fillText(
+        getDate(day),
+        tx,
+        ty - 35
+    );
+
+    ctx.fillStyle = "white";
+    ctx.font = "12px Arial";
+
+    ctx.fillText("Terre", tx, ty + 39);
+}
+
+// ==========================================
+// MISE À JOUR GÉNÉRALE
+// ==========================================
+
+function update() {
+
+    const day = Number(daySlider.value);
+    const hour = Number(hourSlider.value);
+
+    const declination = getDeclination(day);
+
+    document.getElementById("dateValue").textContent =
+        getDate(day);
+
+    const hours = Math.floor(hour);
+
+    const minutes = Math.round(
+        (hour - hours) * 60
+    );
+
+    document.getElementById("timeValue").textContent =
+        hours + " h " +
+        String(minutes).padStart(2, "0");
+
+    document.getElementById("season").textContent =
+        getSeason(day);
+
+    document.getElementById("declination").textContent =
+        declination.toFixed(1) + "°";
+
+    // Mise à jour de la lumière solaire
+
+    updateGlobe(day, hour);
+
+    // Mise à jour de l'orbite
+
+    drawOrbit(day);
+}
+
+// ==========================================
+// CURSEURS
+// ==========================================
+
+daySlider.addEventListener("input", update);
+hourSlider.addEventListener("input", update);
+
+// ==========================================
+// ANIMATION ANNUELLE
+// ==========================================
+
+function play() {
+
+    if (animation) return;
+
+    animation = setInterval(() => {
+
+        let day = Number(daySlider.value) + 1;
+
+        if (day > 365) day = 1;
+
+        daySlider.value = day;
+
+        update();
+
+    }, 100);
+}
+
+function stop() {
+
+    clearInterval(animation);
+    animation = null;
+}
+
+function reset() {
+
+    stop();
+
+    daySlider.value = 80;
+    hourSlider.value = 12;
+
+    // Retour à la vue initiale du globe
+
+    camera.position.set(0, 0, 4.2);
+
+    controls.target.set(0, 0, 0);
+
+    controls.update();
+
+    update();
+}
+
+// ==========================================
+// BOUTONS
+// ==========================================
+
+document.getElementById("playButton")
+    .addEventListener("click", play);
+
+document.getElementById("pauseButton")
+    .addEventListener("click", stop);
+
+document.getElementById("resetButton")
+    .addEventListener("click", reset);
+
+// ==========================================
+// AFFICHAGE INITIAL
+// ==========================================
+
+update();
+
+</script>
+
+</body>
+</html>
